@@ -1,21 +1,21 @@
 .sensor {
-    height: 25px;
-    width: 25px;
-    background-color: #ff0;
-    border-radius: 50%;
-    display: inline-block;
-    float: left;
-  }
+  height: 25px;
+  width: 25px;
+  background-color: #ff0;
+  border-radius: 50%;
+  display: inline-block;
+  float: left;
+}
 
-  .object {
-    height: 25px;
-    width: 25px;
-    background-color: #00f;
-    border-radius: 50%;
-    display: inline-block;
-    float: left;
-  }
+.object {
+  height: 25px;
+  width: 25px;
+  background-color: #00f;
+  border-radius: 50%;
+  display: inline-block;
+  float: left;
+}
 
-  .wrapper {
-    position: absolute;
-  }
+.wrapper {
+  position: absolute;
+}

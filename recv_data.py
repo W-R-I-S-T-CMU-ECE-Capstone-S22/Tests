@@ -5,6 +5,9 @@ import paho.mqtt.client as mqtt
 TOPIC = "wrist/data/sensors"
 
 NUM_SENSORS = 10
+OUT_FILE_NAME = "data.txt"
+
+out_file = open(OUT_FILE_NAME, "w")
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
@@ -26,6 +29,8 @@ def on_message(client, userdata, msg):
     sensor_data = data[-NUM_SENSORS:]
     print(elapsed, ":\t", sensor_data)
 
+    out_file.write(f"{curr_time}, {sensor_data}\n")
+
 client = mqtt.Client("client" + str(random.randrange(100000, 999999)), clean_session=True)
 client.on_connect = on_connect
 client.on_disconnect = on_disconnect
@@ -36,4 +41,8 @@ client.connect("mqtt.eclipseprojects.io", 1883, 60)
 client.loop_start()
 
 while (1):
-    pass
+    try:
+        pass
+    except KeyboardInterrupt:
+        out_file.close()
+        break
