@@ -1,15 +1,18 @@
+import sys
 import time
 import random
 import paho.mqtt.client as mqtt
 
-LOG = False
+LOG = None
+if len(sys.argv) > 1:
+    LOG = sys.argv[1]
 
 DATA_TOPIC = "wrist/data/sensors"
 BATT_TOPIC = "wrist/batt/sensors"
 BATT_TOPIC_ASK = "wrist/batt/ask"
 
 NUM_SENSORS = 10
-OUT_FILE_NAME = "data.txt"
+OUT_FILE_NAME = "data.txt" if LOG is None else LOG
 
 if LOG: out_file = open(OUT_FILE_NAME, "w")
 
