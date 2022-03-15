@@ -2,17 +2,22 @@ import time
 import random
 import paho.mqtt.client as mqtt
 
-TOPIC = "wrist/data/sensors"
+LOG = False
+
+DATA_TOPIC = "wrist/data/sensors"
+BATT_TOPIC = "wrist/batt/sensors"
+BATT_TOPIC_ASK = "wrist/batt/ask"
 
 NUM_SENSORS = 10
 OUT_FILE_NAME = "data.txt"
 
-out_file = open(OUT_FILE_NAME, "w")
+if LOG: out_file = open(OUT_FILE_NAME, "w")
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
 
-    client.subscribe(TOPIC)
+    client.subscribe(DATA_TOPIC)
+    client.subscribe(BATT_TOPIC)
 
 def on_disconnect(client, userdata, rc):
     print("Disconnected with result code " + str(rc))
@@ -21,15 +26,22 @@ def on_disconnect(client, userdata, rc):
 
 def on_message(client, userdata, msg):
     data = list(msg.payload)
+    if msg.topic == DATA_TOPIC:
+        timestamp = int.from_bytes(bytes(data[:-NUM_SENSORS]), "little")
+        curr_time = time.time()
+        elapsed = curr_time - timestamp
 
-    timestamp = int.from_bytes(bytes(data[:-NUM_SENSORS]), "little")
-    curr_time = time.time()
-    elapsed = curr_time - timestamp
+        sensor_data = data[-NUM_SENSORS:]
+        print(elapsed, ":\t", sensor_data)
 
-    sensor_data = data[-NUM_SENSORS:]
-    print(elapsed, ":\t", sensor_data)
+        if LOG: out_file.write(f"{curr_time}, {sensor_data}\n")
+    elif msg.topic == BATT_TOPIC:
+        timestamp, voltage, battery = msg.payload.decode("utf-8").split(",")
+        timestamp = int(timestamp)
+        voltage = float(voltage)
+        battery = float(battery)
 
-    out_file.write(f"{curr_time}, {sensor_data}\n")
+        print("voltage:", voltage, "| battery (%):", battery)
 
 client = mqtt.Client("client" + str(random.randrange(100000, 999999)), clean_session=True)
 client.on_connect = on_connect
@@ -42,7 +54,8 @@ client.loop_start()
 
 while (1):
     try:
-        pass
+        time.sleep(10)
+        client.publish(BATT_TOPIC_ASK, 0)
     except KeyboardInterrupt:
-        out_file.close()
+        if LOG: out_file.close()
         break

@@ -9,6 +9,15 @@
 </head>
 <body>
     <div class="wrapper">
+        Voltage: <div id="volt"></div>
+        Battery %: <div id="batt"></div>
+    </div>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <div class="wrapper">
         <span class="sensor"></span>
         <span id="obj1" class="object"></span>
     </div>
@@ -76,9 +85,14 @@
         <span id="obj10" class="object"></span>
     </div>
 
+
     <script type="text/javascript">
     const MQTT_HOST = "mqtt.eclipseprojects.io/mqtt";
     const MQTT_PORT = 9001;
+
+    const DATA_TOPIC = "wrist/data/sensors";
+    const BATT_TOPIC = "wrist/batt/sensors";
+    const BATT_TOPIC_ASK = "wrist/batt/ask";
 
     // Create a client instance
     client = new Paho.MQTT.Client(MQTT_HOST, MQTT_PORT, "webpage");
@@ -95,7 +109,14 @@
     function onConnect() {
         // Once a connection has been made, make a subscription and send a message.
         console.log("onConnect");
-        client.subscribe("wrist/data/sensors");
+        client.subscribe(DATA_TOPIC);
+        client.subscribe(BATT_TOPIC);
+
+        window.setInterval(function() {
+            const message = new Paho.MQTT.Message("");
+            message.destinationName = BATT_TOPIC_ASK;
+            client.send(message);
+        }, 1000);
     }
 
     // called when the client loses its connection
@@ -107,29 +128,41 @@
 
     // called when a message arrives
     function onMessageArrived(message) {
-        var payload = message.payloadBytes;
-        var data = new Uint8Array(payload);
-        var sensor10 = data[data.length-10];
-        var sensor9 = data[data.length-9];
-        var sensor8 = data[data.length-8];
-        var sensor7 = data[data.length-7];
-        var sensor6 = data[data.length-6];
-        var sensor5 = data[data.length-5];
-        var sensor4 = data[data.length-4];
-        var sensor3 = data[data.length-3];
-        var sensor2 = data[data.length-2];
-        var sensor1 = data[data.length-1];
+        if (message.destinationName == DATA_TOPIC) {
+            var payload = message.payloadBytes;
+            var data = new Uint8Array(payload);
+            if (data.length < 10) return;
 
-        document.getElementById('obj1').style.marginLeft = (sensor1).toString()+"mm";
-        document.getElementById('obj2').style.marginLeft = (sensor2).toString()+"mm";
-        document.getElementById('obj3').style.marginLeft = (sensor3).toString()+"mm";
-        document.getElementById('obj4').style.marginLeft = (sensor4).toString()+"mm";
-        document.getElementById('obj5').style.marginLeft = (sensor5).toString()+"mm";
-        document.getElementById('obj6').style.marginLeft = (sensor6).toString()+"mm";
-        document.getElementById('obj7').style.marginLeft = (sensor7).toString()+"mm";
-        document.getElementById('obj8').style.marginLeft = (sensor8).toString()+"mm";
-        document.getElementById('obj9').style.marginLeft = (sensor9).toString()+"mm";
-        document.getElementById('obj10').style.marginLeft = (sensor10).toString()+"mm";
+            var sensor10 = data[data.length-10];
+            var sensor9 = data[data.length-9];
+            var sensor8 = data[data.length-8];
+            var sensor7 = data[data.length-7];
+            var sensor6 = data[data.length-6];
+            var sensor5 = data[data.length-5];
+            var sensor4 = data[data.length-4];
+            var sensor3 = data[data.length-3];
+            var sensor2 = data[data.length-2];
+            var sensor1 = data[data.length-1];
+
+            document.getElementById('obj1').style.marginLeft = (sensor1).toString()+"mm";
+            document.getElementById('obj2').style.marginLeft = (sensor2).toString()+"mm";
+            document.getElementById('obj3').style.marginLeft = (sensor3).toString()+"mm";
+            document.getElementById('obj4').style.marginLeft = (sensor4).toString()+"mm";
+            document.getElementById('obj5').style.marginLeft = (sensor5).toString()+"mm";
+            document.getElementById('obj6').style.marginLeft = (sensor6).toString()+"mm";
+            document.getElementById('obj7').style.marginLeft = (sensor7).toString()+"mm";
+            document.getElementById('obj8').style.marginLeft = (sensor8).toString()+"mm";
+            document.getElementById('obj9').style.marginLeft = (sensor9).toString()+"mm";
+            document.getElementById('obj10').style.marginLeft = (sensor10).toString()+"mm";
+        }
+        else if (message.destinationName == BATT_TOPIC) {
+            var payload = message.payloadString.split(",");
+            var voltage = payload[1];
+            var battery = payload[2];
+
+            document.getElementById('volt').innerText = voltage + " V";
+            document.getElementById('batt').innerText = battery + " %";
+        }
     }
     </script>
 </body>
